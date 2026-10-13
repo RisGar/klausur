@@ -1,3 +1,10 @@
 assets/*.pdf
 **/.DS_Store
 .reasonix/
+
+# node_modules comes from the nix store (`nix develop`), never from here
+node_modules/
+.direnv/
+result
+result-*
+.nix-tmp/

@@ -1,69 +1,41 @@
+# The server, compiled into a single self-contained executable by
+# `bun build --compile`. Nothing comes from npm here: the source has no
+# runtime dependencies, bun is only needed at build time.
+#
+# The flake outputs live in flake.nix, the NixOS module in module.nix.
 {
-  config,
   lib,
-  pkgs,
-  ...
+  src,
+  stdenvNoCC,
+  bun,
 }:
-let
-  cfg = config.services.klausur;
+stdenvNoCC.mkDerivation {
+  pname = "klausur";
+  version = "0.1.0";
 
-  # Every *.pdf in ./assets is a paper that can be handed out
-  papers = lib.attrNames (
-    lib.filterAttrs (name: type: type == "regular" && lib.hasSuffix ".pdf" (lib.toLower name)) (
-      builtins.readDir ./assets
-    )
-  );
+  inherit src;
 
-  # Served from a read-only store path holding nothing but the papers
-  examDir = pkgs.linkFarm "klausur-papers" (
-    map (name: {
-      inherit name;
-      path = ./assets + "/${name}";
-    }) papers
-  );
-in
-{
-  options.services.klausur = {
-    enable = lib.mkEnableOption "klausur exam paper distributor";
+  nativeBuildInputs = [ bun ];
 
-    port = lib.mkOption {
-      type = lib.types.port;
-      default = 8383;
-      description = "Port the local server binds to (bound to 127.0.0.1; front it with a reverse proxy).";
-    };
-  };
+  buildPhase = ''
+    runHook preBuild
+    export HOME=$(mktemp -d) # bun wants somewhere to write its cache
+    bun build ./index.ts --compile --minify --bytecode --outfile klausur
+    runHook postBuild
+  '';
 
-  config = lib.mkIf cfg.enable {
-    systemd.services.klausur = {
-      description = "Exam paper distributor";
-      wantedBy = [ "multi-user.target" ];
-      after = [ "network.target" ];
+  installPhase = ''
+    runHook preInstall
+    install -Dm755 klausur $out/bin/klausur
+    runHook postInstall
+  '';
 
-      environment = {
-        KLAUSUR_EXAM_DIR = "${examDir}";
-        KLAUSUR_PORT = toString cfg.port;
-        PYTHONDONTWRITEBYTECODE = "1";
-        PYTHONUNBUFFERED = "1";
-      };
+  # a bun-compiled binary stops working if fixup strips or patches it
+  dontFixup = true;
 
-      serviceConfig = {
-        ExecStart = "${pkgs.python3.interpreter} ${./klausur-serve.py}";
-        User = "klausur";
-        StateDirectory = "klausur";
-        Restart = "on-failure";
-        RestartSec = "1s";
-
-        NoNewPrivileges = true;
-        PrivateTmp = true;
-        ProtectHome = true;
-        ProtectSystem = "strict";
-      };
-    };
-
-    users.users.klausur = {
-      isSystemUser = true;
-      group = "klausur";
-    };
-    users.groups.klausur = { };
+  meta = {
+    description = "Hand every visitor of klausur.rishab.org one exam paper";
+    license = lib.licenses.eupl12;
+    mainProgram = "klausur";
   };
 }
