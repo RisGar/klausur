@@ -3,7 +3,7 @@ assets/*.pdf
 .reasonix/
 
 # node_modules comes from the nix store (`nix develop`), never from here
-node_modules/
+node_modules
 .direnv/
 result
 result-*

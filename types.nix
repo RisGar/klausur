@@ -1,9 +1,9 @@
-# `node_modules` holding only the type packages, taken straight from the
-# registry but pinned by the integrity hashes recorded in bun.lock.
+# `node_modules` with only the type packages
 #
-# bun2nix would do this automatically, but it only understands Bun <= 1.3
-# lockfiles (`lockfileVersion: 1`); Bun 1.4 writes version 2. When bumping a
-# type package: `bun install`, then update the version, URL and hash below.
+# - fetched from the registry, pinned by the integrity hashes in bun.lock
+# - bun2nix would generate this, but it only reads Bun <= 1.3 lockfiles
+#   (`lockfileVersion: 1`, while Bun 1.4 writes 2)
+# - when bumping: `bun install`, then update the version, URL and hash here
 {
   stdenvNoCC,
   fetchurl,

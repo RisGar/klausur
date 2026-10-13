@@ -1,23 +1,35 @@
-# Exam papers for klausur.rishab.org
+# klausur
 
-Every `*.pdf` in this directory is a paper that can be handed out. Put the
-papers here and rebuild the homelab:
+Serves each visitor exactly one exam paper
 
-    nixos-rebuild switch --flake .#Rishabs-Homelab
+## Server
 
-Nothing else has to change when papers are added or removed: the list of
-candidates is read from the store path when the service starts and the ordering
-is just the sorted file names.
+- `index.ts`, a bun server on the unix socket in `$KLAUSUR_SOCKET`
+  (default `./klausur.sock`)
+- `GET /` returns a PDF from `$EXAM_DIR`, any other path is a 404
+- `$EXAM_DIR` is required and holds the papers as `*.pdf`
+- no papers there means a 503
+- papers are read once at startup, so restart after adding or removing one
 
-Each visitor is served exactly one paper:
+## Cookies
 
-- a visitor without a cookie gets the next paper in round-robin order, so all
-  papers are handed out equally often,
-- the choice is then pinned in a `klausur` cookie so reloading always yields
-  the same paper,
-- the cookie holds an HMAC of the file name, so it cannot be edited to pick
-  another paper.
+- no `klausur` cookie means a random paper
+- the cookie pins that paper, so a reload serves the same one
+- the value is `Bun.hash` of the paper's file name
+- it is not signed, so another paper's hash in the cookie picks that paper
+- a hash of a paper that is gone is replaced by a fresh pick
 
-The assignment counter and the signing secret live in `/var/lib/klausur`
-(`assignments` and `secret`). Deleting them restarts the round-robin and
-invalidates all existing cookies.
+## Nix
+
+    nix build        # result/bin/klausur, the server compiled by bun
+    nix develop      # bun and tsc, node_modules linked from the store
+    nix flake check  # builds the package and typechecks
+
+- `flake.nix`: package, check and `nixosModules.default` with
+  `services.klausur.enable` and `services.klausur.socketPath`
+- `default.nix`: the package
+- `module.nix`: the NixOS module, serving `assets/*.pdf` from a store path
+- `types.nix`: `@types/bun` and its dependencies pinned with the hashes from
+  `bun.lock`
+- the server has no runtime dependencies, only the typecheck needs packages
+- `bun run check` in a dev shell is the same typecheck

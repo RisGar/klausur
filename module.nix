@@ -57,8 +57,7 @@ in
         ExecStart = lib.getExe cfg.package;
         User = "klausur";
         StateDirectory = "klausur";
-        # owns /run/klausur where the unix socket lives; 0750 so a proxy
-        # user added to the "klausur" group can connect
+        # the socket dir, 0750 so a proxy user in the klausur group can connect
         RuntimeDirectory = "klausur";
         RuntimeDirectoryMode = "0750";
         Restart = "on-failure";

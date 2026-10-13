@@ -9,8 +9,7 @@
       lib = nixpkgs.lib;
       systems = lib.systems.flakeExposed;
 
-      # exactly the files the build needs: the papers, .jj and any lingering
-      # node_modules must not be copied into the store
+      # only the files the build needs, so papers and .jj stay out of the store
       src = nixpkgs.lib.fileset.toSource {
         root = ./.;
         fileset = nixpkgs.lib.fileset.unions [
@@ -35,8 +34,7 @@
 
       forAll = f: nixpkgs.lib.genAttrs systems (system: f nixpkgs.legacyPackages.${system});
 
-      # the module with the server injected, so `services.klausur.package` has
-      # a default while the papers keep coming from ./assets
+      # module with the server injected, papers still come from ./assets
       module = { pkgs, ... }@args: import ./module.nix (args // { klausurPackage = klausur pkgs; });
     in
     {
@@ -57,7 +55,7 @@
             pkgs.typescript
           ];
 
-          # editors and `tsc` find the types immediately; no `bun install`
+          # node_modules for editors and tsc, without bun install
           shellHook = ''
             ln -sfn ${nodeModules pkgs}/node_modules node_modules
           '';

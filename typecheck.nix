@@ -1,5 +1,4 @@
-# `tsc --noEmit`, with tsc from nixpkgs and the Bun type definitions taken
-# from types.nix instead of a `bun install`.
+# `tsc --noEmit`, with typescript from nixpkgs and the Bun types from types.nix
 {
   src,
   nodeModules,

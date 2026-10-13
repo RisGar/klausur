@@ -1,8 +1,8 @@
-# The server, compiled into a single self-contained executable by
-# `bun build --compile`. Nothing comes from npm here: the source has no
-# runtime dependencies, bun is only needed at build time.
+# klausur, compiled into one self-contained executable
 #
-# The flake outputs live in flake.nix, the NixOS module in module.nix.
+# built by `bun build --compile`, so bun is a build input and not a runtime one
+# nothing comes from npm, the source has no runtime dependencies
+# flake outputs live in flake.nix, the NixOS module in module.nix
 {
   lib,
   src,

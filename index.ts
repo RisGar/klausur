@@ -47,7 +47,7 @@ const paperForCookie = (
 const cookieHeader = (value: string): string =>
   `${COOKIE_NAME}=${value}; Path=/; Max-Age=${COOKIE_MAX_AGE}; SameSite=Lax; Secure; HttpOnly`;
 
-/** The value of our cookie in a `Cookie` header, or "" if there is none. */
+/** The value of our cookie in a `Cookie` header, or "" if there is none */
 const readCookie = (header: string | null): string =>
   (header?.split(";") ?? [])
     .map((part) => part.trim().split("="))
